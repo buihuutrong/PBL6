@@ -15,6 +15,6 @@ router.post('/book/:roomId', protect, bookRoom);
 router.get('/check-availability/:roomId', checkAvailability);
 
 // Hủy đặt phòng
-router.delete('/cancel/:bookingId', protect, cancelBooking);
+router.delete('/cancel/:reservationId', protect, cancelBooking);
 
 module.exports = router;

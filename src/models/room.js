@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const roomSchema = new mongoose.Schema({
     hotel: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Hotel', // Liên kết với mô hình Hotel
+        ref: 'Hotel',
         required: true,
     },
     roomNumber: {
@@ -18,11 +18,26 @@ const roomSchema = new mongoose.Schema({
         type: Number,
         required: [true, 'Please add the room price'],
     },
-    // Các trường bổ sung khác có thể thêm vào đây
-    availableDates: {
-        type: [Date], // Mảng các ngày
-        required: [true, 'Please add available dates for the room'],
+    roomType: {
+        type: String,
     },
+    balcony: {
+        type: Boolean,
+    },
+    amenities: {
+        type: [String],
+        default: [],
+    },
+    availableDates: [{
+        startDate: {
+            type: Date,
+            required: true,
+        },
+        endDate: {
+            type: Date,
+            required: true,
+        },
+    }],
 }, { timestamps: true });
 
 const Room = mongoose.model('Room', roomSchema, 'Room');

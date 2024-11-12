@@ -4,6 +4,7 @@ const hotelRoutes = require('./src/routes/hotelRoutes');
 const authRoutes = require('./src/routes/authRoutes');
 const roomRoutes = require('./src/routes/roomRoutes')
 const reservationRoutes = require('./src/routes/reservationRoutes');
+const paymentRoutes = require('./src/routes/paymentRoutes');
 const { engine } = require('express-handlebars'); // Sử dụng destructuring để lấy engine từ express-handlebars
 const path = require('path');
 
@@ -48,6 +49,8 @@ app.use('/api/hotels', hotelRoutes);
 app.use('/api/rooms', roomRoutes);
 
 app.use('/api/reservations', reservationRoutes);
+
+app.use('/api', paymentRoutes);
 
 // Định nghĩa route mẫu
 app.get('/', (req, res) => {

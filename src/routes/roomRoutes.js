@@ -1,7 +1,7 @@
 // routes/roomRoutes.js
 const express = require('express');
 const { protect, authorize } = require('../middlewares/authMiddleware');
-const { addRoom, deleteRoom, updateRoom } = require('../controllers/roomController');
+const { addRoom, deleteRoom, updateRoom, searchRooms } = require('../controllers/roomController');
 
 const router = express.Router();
 
@@ -12,5 +12,8 @@ router.delete('/delete/:id', protect, authorize('admin', 'hotelOwner'), deleteRo
 
 // Route cập nhật phòng
 router.put('/update/:id', protect, authorize('hotelOwner'), updateRoom);
+
+// tìm phòng
+router.post('/search', searchRooms);
 
 module.exports = router;
