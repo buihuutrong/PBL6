@@ -50,7 +50,9 @@ app.use('/api/rooms', roomRoutes);
 
 app.use('/api/reservations', reservationRoutes);
 
-app.use('/api', paymentRoutes);
+//app.use('/api', paymentRoutes);
+
+app.use('/api/payments', paymentRoutes);
 
 // Định nghĩa route mẫu
 app.get('/', (req, res) => {
