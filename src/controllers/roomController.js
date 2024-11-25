@@ -431,4 +431,28 @@ exports.searchRooms = async (req, res) => {
         });
     }
 };
+exports.detailRoom = async (req, res) => {
+    try {
+        const roomId = req.params.id;
+        const room = await Room.findById(roomId);
 
+        if (!room) {
+            return res.status(400).json({
+                success: false,
+                message: "room not found",
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            data: room,
+        });
+    } catch (error) {
+        console.error('Error fetching room details:', error.message);
+        return res.status(500).json({
+            success: false,
+            message: 'Internal server error',
+        });
+    }
+
+};

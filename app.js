@@ -5,8 +5,11 @@ const authRoutes = require('./src/routes/authRoutes');
 const roomRoutes = require('./src/routes/roomRoutes')
 const reservationRoutes = require('./src/routes/reservationRoutes');
 const orderRoutes = require('./src/routes/orderRoutes');
+const reviewRoutes = require('./src/routes/reviewRoutes');
 const { engine } = require('express-handlebars'); // Sử dụng destructuring để lấy engine từ express-handlebars
 const path = require('path');
+
+const cors = require('cors');
 
 const dotenv = require('dotenv'); // Thêm dòng này để import dotenv
 
@@ -26,6 +29,16 @@ app.use((err, req, res, next) => {
         error: err.message,
     });
 });
+
+// Cấu hình CORS
+app.use(cors({
+    origin: 'http://localhost:8386', // Chỉ cho phép frontend của bạn
+    methods: ['GET', 'POST', 'PUT', 'DELETE'], // Các method được phép
+    credentials: true, // Nếu frontend gửi kèm cookie
+}));
+
+// Hoặc cho phép mọi nguồn gốc (không khuyến khích trong sản phẩm thực tế)
+app.use(cors());
 
 
 
@@ -53,6 +66,11 @@ app.use('/api/reservations', reservationRoutes);
 //app.use('/api', paymentRoutes);
 
 app.use('/api/orders', orderRoutes); // Đăng ký routes order
+
+app.use('/uploads/reviews', express.static('uploads'));
+
+app.use('/api/reviews', reviewRoutes);
+
 
 
 // Định nghĩa route mẫu
