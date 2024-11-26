@@ -3,7 +3,7 @@ const jwt = require('jsonwebtoken');
 
 // Đăng ký người dùng
 exports.register = async (req, res) => {
-    const { name, email, password, role } = req.body;
+    const { name, email, password, country, phonenumber, role } = req.body;
 
     try {
         // Kiểm tra xem email đã tồn tại chưa
@@ -20,6 +20,8 @@ exports.register = async (req, res) => {
             name,
             email,
             password,
+            country,
+            phonenumber,
             role: role || 'customer', // Nếu không có vai trò, mặc định là 'customer'
         });
 

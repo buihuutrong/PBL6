@@ -21,6 +21,11 @@ const userSchema = new mongoose.Schema({
         minlength: 6,
         select: false, // Không trả về mật khẩu khi truy vấn
     },
+
+    country: { type: String, required: true },
+
+    phonenumber: { type: String, required: true },
+
     role: {
         type: String,
         enum: ['customer', 'hotelOwner', 'admin'],
