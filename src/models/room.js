@@ -24,6 +24,11 @@ const roomSchema = new mongoose.Schema({
     balcony: {
         type: Boolean,
     },
+    reviews: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Review',
+
+    },
     amenities: {
         type: [String],
         default: [],

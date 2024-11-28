@@ -48,7 +48,7 @@ exports.createOrder = async (req, res) => {
             amount: amount, // Tổng số tiền thanh toán
             description: `Payment for reservation #${reservationId}`,
             bank_code: "", // Sử dụng Zalopay app để thanh toán
-            callback_url: "https://0b75-2405-4802-9643-2b10-2d88-b8b7-9b2d-a7d0.ngrok-free.app/api/orders/callback",
+            callback_url: "https://5ab3-2405-4802-b554-6c00-98d-eebc-beb4-74c9.ngrok-free.app/api/orders/callback",
         };
 
         // Tạo mã xác thực

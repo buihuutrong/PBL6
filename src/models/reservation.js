@@ -19,6 +19,7 @@ const reservationSchema = new mongoose.Schema({
         type: Date,
         required: [true, 'Please add a check-out date'],
     },
+    isReviewed: { type: Boolean, default: false }, // Đánh dấu nếu đã review
     status: {
         type: String,
         enum: ['booked', 'cancelled', 'completed'],
