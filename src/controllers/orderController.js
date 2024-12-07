@@ -3,6 +3,8 @@ const CryptoJS = require('crypto-js');
 const moment = require('moment');
 const Reservation = require('../models/reservation'); // Model đặt phòng
 const Order = require('../models/order'); // Model order bạn đã tạo
+const Transaction = require('../models/transaction'); // Model giao dịch
+
 
 // APP INFO
 const config = {
@@ -17,7 +19,7 @@ exports.createOrder = async (req, res) => {
     if (!req.user || !req.user.id) {
         return res.status(401).json({ success: false, message: 'Người dùng không được xác thực' });
     }
-    const { reservationId, amount } = req.body; // Nhận ID đặt phòng và số tiền từ client
+    const { reservationId } = req.body; // Nhận ID đặt phòng và số tiền từ client
 
     try {
         // Lấy thông tin đặt phòng
@@ -26,12 +28,22 @@ exports.createOrder = async (req, res) => {
             return res.status(404).json({ success: false, message: 'Reservation not found' });
         }
 
+        // Tính toán số tiền (amount) dựa trên giá phòng và số ngày
+        if (!reservation.room || !reservation.room.price) {
+            return res.status(400).json({ success: false, message: 'Room information is incomplete or missing' });
+        }
+
+        const checkInDate = new Date(reservation.checkInDate);
+        const checkOutDate = new Date(reservation.checkOutDate);
+        const nights = Math.ceil((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24)); // Số đêm
+        const amount = reservation.room.price * nights; // Tổng số tiền
+
         // Tạo thông tin đơn hàng
         const transID = Math.floor(Math.random() * 1000000);
         const embed_data = { reservationId }; // Gắn ID đặt phòng vào embed_data để xử lý callback
         const items = [
             {
-                room_name: reservation.room.name, // Lấy tên phòng
+                //room_name: reservation.room.name, // Lấy tên phòng
                 checkIn: reservation.checkInDate,
                 checkOut: reservation.checkOutDate,
                 amount: amount, // Số tiền cho phòng
@@ -48,7 +60,7 @@ exports.createOrder = async (req, res) => {
             amount: amount, // Tổng số tiền thanh toán
             description: `Payment for reservation #${reservationId}`,
             bank_code: "", // Sử dụng Zalopay app để thanh toán
-            callback_url: "https://5ab3-2405-4802-b554-6c00-98d-eebc-beb4-74c9.ngrok-free.app/api/orders/callback",
+            callback_url: "https://f595-2405-4802-6f84-8ab0-6c8c-4f37-7941-96cc.ngrok-free.app/api/orders/callback",
         };
 
         // Tạo mã xác thực
@@ -57,6 +69,7 @@ exports.createOrder = async (req, res) => {
 
         // Gọi API Zalopay
         const response = await axios.post(config.endpoint, null, { params: order });
+
 
         if (response.data.return_code === 1) {
             // Lưu đơn hàng vào database
@@ -89,7 +102,78 @@ exports.createOrder = async (req, res) => {
         });
     }
 };
+
 // Xử lý callback từ Zalopay
+// exports.handleZaloPayCallback = async (req, res) => {
+//     let result = {};
+
+//     try {
+//         const dataStr = req.body.data;
+//         const reqMac = req.body.mac;
+
+//         // Tính toán mac
+//         const mac = CryptoJS.HmacSHA256(dataStr, config.key2).toString();
+
+//         console.log('dataStr:', dataStr);
+//         console.log('reqMac:', reqMac);
+//         console.log('calculatedMac:', mac);
+
+//         if (reqMac !== mac) {
+//             result.return_code = -1;
+//             result.return_message = "mac not equal";
+//         } else {
+//             // Parse dữ liệu JSON từ callback
+//             const dataJson = JSON.parse(dataStr);
+
+//             // Lấy thông tin giao dịch
+//             const appTransId = dataJson["app_trans_id"];
+//             const order = await Order.findOne({ transId: appTransId });
+
+//             if (!order) {
+//                 throw new Error(`Order with transId ${appTransId} not found`);
+//             }
+
+//             // Cập nhật trạng thái của Order
+//             order.status = 'paid';
+//             await order.save();
+
+//             // Cập nhật trạng thái của Reservation
+//             const reservation = await Reservation.findById(order.reservation);
+//             if (!reservation) {
+//                 throw new Error(`Reservation with id ${order.reservation} not found`);
+//             }
+//             reservation.status = 'completed';
+//             await reservation.save();
+
+//             // Tạo giao dịch mới
+//             const transaction = new Transaction({
+//                 orderId: order._id,
+//                 userId: userId,
+//                 amount: amount,
+//                 status: "paid",
+//                 paymentDate: new Date(),
+//             });
+
+//             await transaction.save();
+
+
+
+//             console.log(`Order ${order._id} marked as paid`);
+//             console.log(`Reservation ${reservation._id} marked as completed`);
+
+//             result.return_code = 1;
+//             result.return_message = "success";
+//         }
+//     } catch (err) {
+//         console.error("Error processing callback:", err.message);
+//         result.return_code = 0; // Zalopay sẽ callback lại
+//         result.return_message = err.message;
+//     }
+
+//     // Trả kết quả về Zalopay
+//     res.json(result);
+// };
+
 exports.handleZaloPayCallback = async (req, res) => {
     let result = {};
 
@@ -100,43 +184,75 @@ exports.handleZaloPayCallback = async (req, res) => {
         // Tính toán mac
         const mac = CryptoJS.HmacSHA256(dataStr, config.key2).toString();
 
-        console.log('dataStr:', dataStr);
-        console.log('reqMac:', reqMac);
-        console.log('calculatedMac:', mac);
+        console.log("dataStr:", dataStr);
+        console.log("reqMac:", reqMac);
+        console.log("calculatedMac:", mac);
 
         if (reqMac !== mac) {
             result.return_code = -1;
             result.return_message = "mac not equal";
-        } else {
-            // Parse dữ liệu JSON từ callback
-            const dataJson = JSON.parse(dataStr);
-
-            // Lấy thông tin giao dịch
-            const appTransId = dataJson["app_trans_id"];
-            const order = await Order.findOne({ transId: appTransId });
-
-            if (!order) {
-                throw new Error(`Order with transId ${appTransId} not found`);
-            }
-
-            // Cập nhật trạng thái của Order
-            order.status = 'paid';
-            await order.save();
-
-            // Cập nhật trạng thái của Reservation
-            const reservation = await Reservation.findById(order.reservation);
-            if (!reservation) {
-                throw new Error(`Reservation with id ${order.reservation} not found`);
-            }
-            reservation.status = 'completed';
-            await reservation.save();
-
-            console.log(`Order ${order._id} marked as paid`);
-            console.log(`Reservation ${reservation._id} marked as completed`);
-
-            result.return_code = 1;
-            result.return_message = "success";
+            return res.json(result); // Trả về ngay nếu mac không khớp
         }
+
+        // Parse dữ liệu JSON từ callback
+        let dataJson;
+        try {
+            dataJson = JSON.parse(dataStr);
+        } catch (err) {
+            throw new Error("Invalid JSON format in callback data");
+        }
+
+        // Lấy thông tin giao dịch
+        const appTransId = dataJson["app_trans_id"];
+        const order = await Order.findOne({ transId: appTransId });
+
+        if (!order) {
+            throw new Error(`Order with transId ${appTransId} not found`);
+        }
+
+        // Kiểm tra nếu trạng thái đã là 'paid'
+        if (order.status === "paid") {
+            result.return_code = 1;
+            result.return_message = "Order already paid";
+            return res.json(result);
+        }
+
+        // Cập nhật trạng thái của Order
+        order.status = "paid";
+        await order.save();
+
+        // Cập nhật trạng thái của Reservation
+        const reservation = await Reservation.findById(order.reservation);
+        if (!reservation) {
+            throw new Error(`Reservation with id ${order.reservation} not found`);
+        }
+        reservation.status = "completed";
+        await reservation.save();
+
+
+
+        console.log("UserId:", order.user._id);
+        console.log("Amount:", order.amount);
+
+
+
+
+        const transaction = new Transaction({
+            orderId: order._id,
+            userId: order.user._id, // Lấy từ liên kết với Order
+            amount: order.amount, // Giả sử Order có trường amount
+            status: "paid",
+            paymentDate: new Date(),
+        });
+
+        await transaction.save();
+
+        console.log(`Order ${order._id} marked as paid`);
+        console.log(`Reservation ${reservation._id} marked as completed`);
+        console.log(`Transaction created for order ${order._id}`);
+
+        result.return_code = 1;
+        result.return_message = "success";
     } catch (err) {
         console.error("Error processing callback:", err.message);
         result.return_code = 0; // Zalopay sẽ callback lại

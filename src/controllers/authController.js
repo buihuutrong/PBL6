@@ -87,3 +87,20 @@ exports.login = async (req, res) => {
         });
     }
 };
+exports.getUserList = async (req, res) => {
+    try {
+        // Kiểm tra quyền admin (nếu sử dụng middleware)
+        const users = await User.find().select('name email role createdAt');  // Chỉ lấy những trường cần thiết
+
+        // Trả về danh sách người dùng
+        res.status(200).json({
+            success: true,
+            data: users,
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message,
+        });
+    }
+};
