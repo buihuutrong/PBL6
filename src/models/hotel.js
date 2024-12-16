@@ -1,9 +1,7 @@
 const mongoose = require('mongoose');
 
 const hotelSchema = new mongoose.Schema({
-    hotelId: {
-        type: String,
-    },
+
     name: {
         type: String,
         required: true,
@@ -16,6 +14,12 @@ const hotelSchema = new mongoose.Schema({
         country: {
             type: String,
             required: true,
+        },
+        lat: {
+            type: Number,
+        },
+        Lng: {
+            type: Number,
         },
     },
     rating: {
@@ -31,6 +35,7 @@ const hotelSchema = new mongoose.Schema({
     rooms: [{ // Liên kết tới các phòng trong khách sạn
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Room', // Liên kết với mô hình Room
+        required: true,
     }],
     amenities: [String],
 });

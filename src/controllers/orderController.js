@@ -3,7 +3,12 @@ const CryptoJS = require('crypto-js');
 const moment = require('moment');
 const Reservation = require('../models/reservation'); // Model đặt phòng
 const Order = require('../models/order'); // Model order bạn đã tạo
+const Hotel = require('../models/hotel');
+const Room = require('../models/room');
+const User = require('../models/user');
 const Transaction = require('../models/transaction'); // Model giao dịch
+const AdminBalance = require('../models/adminBalance');
+const HostBalance = require('../models/hostBalance');
 
 
 // APP INFO
@@ -60,7 +65,7 @@ exports.createOrder = async (req, res) => {
             amount: amount, // Tổng số tiền thanh toán
             description: `Payment for reservation #${reservationId}`,
             bank_code: "", // Sử dụng Zalopay app để thanh toán
-            callback_url: "https://f595-2405-4802-6f84-8ab0-6c8c-4f37-7941-96cc.ngrok-free.app/api/orders/callback",
+            callback_url: "https://7b9e-2405-4802-6f84-8ab0-9cdc-945e-ee95-fbe5.ngrok-free.app/api/orders/callback",
         };
 
         // Tạo mã xác thực
@@ -102,77 +107,6 @@ exports.createOrder = async (req, res) => {
         });
     }
 };
-
-// Xử lý callback từ Zalopay
-// exports.handleZaloPayCallback = async (req, res) => {
-//     let result = {};
-
-//     try {
-//         const dataStr = req.body.data;
-//         const reqMac = req.body.mac;
-
-//         // Tính toán mac
-//         const mac = CryptoJS.HmacSHA256(dataStr, config.key2).toString();
-
-//         console.log('dataStr:', dataStr);
-//         console.log('reqMac:', reqMac);
-//         console.log('calculatedMac:', mac);
-
-//         if (reqMac !== mac) {
-//             result.return_code = -1;
-//             result.return_message = "mac not equal";
-//         } else {
-//             // Parse dữ liệu JSON từ callback
-//             const dataJson = JSON.parse(dataStr);
-
-//             // Lấy thông tin giao dịch
-//             const appTransId = dataJson["app_trans_id"];
-//             const order = await Order.findOne({ transId: appTransId });
-
-//             if (!order) {
-//                 throw new Error(`Order with transId ${appTransId} not found`);
-//             }
-
-//             // Cập nhật trạng thái của Order
-//             order.status = 'paid';
-//             await order.save();
-
-//             // Cập nhật trạng thái của Reservation
-//             const reservation = await Reservation.findById(order.reservation);
-//             if (!reservation) {
-//                 throw new Error(`Reservation with id ${order.reservation} not found`);
-//             }
-//             reservation.status = 'completed';
-//             await reservation.save();
-
-//             // Tạo giao dịch mới
-//             const transaction = new Transaction({
-//                 orderId: order._id,
-//                 userId: userId,
-//                 amount: amount,
-//                 status: "paid",
-//                 paymentDate: new Date(),
-//             });
-
-//             await transaction.save();
-
-
-
-//             console.log(`Order ${order._id} marked as paid`);
-//             console.log(`Reservation ${reservation._id} marked as completed`);
-
-//             result.return_code = 1;
-//             result.return_message = "success";
-//         }
-//     } catch (err) {
-//         console.error("Error processing callback:", err.message);
-//         result.return_code = 0; // Zalopay sẽ callback lại
-//         result.return_message = err.message;
-//     }
-
-//     // Trả kết quả về Zalopay
-//     res.json(result);
-// };
 
 exports.handleZaloPayCallback = async (req, res) => {
     let result = {};
@@ -230,26 +164,90 @@ exports.handleZaloPayCallback = async (req, res) => {
         await reservation.save();
 
 
+        const room = await Room.findById(reservation.room);
+        if (!room) {
+            throw new Error(`Room with id ${reservation.room} not found`);
+        }
+
+        const hotel = await Hotel.findById(room.hotel);
+        if (!hotel) {
+            throw new Error(`Hotel with id ${room.hotel} not found`);
+        }
+
+        const hostId = hotel.owner;
+        if (!hostId) {
+            throw new Error(`Host ID not found in Hotel with id ${room.hotel}`);
+        }
+
 
         console.log("UserId:", order.user._id);
         console.log("Amount:", order.amount);
 
+        // Quản lý số dư Admin và Host
+        const hostAmount = order.amount * 0.75; // Host nhận 75%
+        const adminFee = order.amount * 0.25;  // Admin nhận 25%
 
+        const host = await User.findById(hostId);
+
+
+        if (host) {
+            // Nếu tìm thấy host, gán thông tin cho hostName và hostEmail
+            hostName = host.name;
+            hostEmail = host.email;
+        } else {
+            console.log('Host not found');
+        }
 
 
         const transaction = new Transaction({
             orderId: order._id,
             userId: order.user._id, // Lấy từ liên kết với Order
+            hostId: hostId, // Lấy hostId từ Reservation
+            reservationId: order.reservation,
             amount: order.amount, // Giả sử Order có trường amount
+            hostAmount: hostAmount, // Tính toán dựa trên công thức (amount - adminFee)
+            adminFee: adminFee,
             status: "paid",
             paymentDate: new Date(),
+            hostName: hostName,  // Lưu thông tin hostName vào Transaction
+            hostEmail: hostEmail // Lưu thông tin hostEmail vào Transaction
+
         });
 
         await transaction.save();
 
+
+
+
+        // Cập nhật AdminBalance
+        let adminBalance = await AdminBalance.findOne();
+        if (!adminBalance) {
+            console.log('Admin balance not found. Initializing new admin balance.');
+            adminBalance = new AdminBalance({
+                totalBalance: 0,
+                lastUpdated: Date.now(),
+            });
+        }
+        adminBalance.totalBalance += adminFee; // Cộng thêm phần hoa hồng của admin
+        adminBalance.lastUpdated = Date.now();
+        await adminBalance.save();
+
+        // Cập nhật HostBalance
+        let hostBalance = await HostBalance.findOne({ hostId });
+        if (!hostBalance) {
+            console.log(`Host balance not found for hostId: ${hostId}, creating new balance`);
+            hostBalance = new HostBalance({ hostId, totalBalance: 0 });
+        }
+        hostBalance.totalBalance += hostAmount;
+        hostBalance.lastUpdated = Date.now();
+        await hostBalance.save();
+
+
         console.log(`Order ${order._id} marked as paid`);
         console.log(`Reservation ${reservation._id} marked as completed`);
         console.log(`Transaction created for order ${order._id}`);
+        console.log(`Host ${reservation.hostId} received amount ${hostAmount}`);
+        console.log(`Admin balance updated, remaining: ${adminBalance.totalBalance}`);
 
         result.return_code = 1;
         result.return_message = "success";

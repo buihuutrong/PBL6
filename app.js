@@ -33,7 +33,7 @@ app.use((err, req, res, next) => {
 
 // Cấu hình CORS
 app.use(cors({
-    origin: 'http://localhost:8386', // Chỉ cho phép frontend của bạn
+    origin: '*', // Chỉ cho phép frontend của bạn
     methods: ['GET', 'POST', 'PUT', 'DELETE'], // Các method được phép
     credentials: true, // Nếu frontend gửi kèm cookie
 }));
@@ -72,7 +72,7 @@ app.use('/uploads/reviews', express.static('uploads'));
 
 app.use('/api/reviews', reviewRoutes);
 
-app.use('/api/', transactionRoutes);
+app.use('/api/transaction', transactionRoutes);
 
 
 

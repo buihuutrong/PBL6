@@ -29,6 +29,7 @@ const orderSchema = new mongoose.Schema({
         type: String, // URL thanh toán từ Zalopay
         required: true,
     },
+    details: String, // Thông tin chi tiết về order
 }, { timestamps: true });
 
 const Order = mongoose.model('Order', orderSchema, 'Order');

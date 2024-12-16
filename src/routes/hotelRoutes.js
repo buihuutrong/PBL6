@@ -18,23 +18,7 @@ router.delete('/hotel/:id', protect, authorize('admin'), hotelController.deleteH
 // Route cập nhật khách sạn
 router.put('/hotel/:id', protect, authorize('admin', 'hotelOwner'), hotelController.updateHotel);
 
+// Chi tiết khách sạn và danh sách phòng
+router.get('/detailhotel/:id', hotelController.getHotelDetails);
 
 
-
-// // Route để lấy tất cả khách sạn
-// router.get('/all', hotelController.getAllHotels);
-
-// // Routes thêm 1 khách sạn
-// router.post('/create', hotelController.createHotel);
-
-// // Route để cập nhật một khách sạn
-// router.put('/:id', hotelController.updateHotel); // PUT để cập nhật toàn bộ khách sạn
-
-// // hoặc bạn có thể dùng PATCH nếu chỉ muốn cập nhật một phần
-// router.patch('/:id', hotelController.updateHotel);
-
-// // Route để xóa một khách sạn theo ID
-// router.delete('/:id', hotelController.deleteHotel);
-
-
-module.exports = router;
