@@ -1,7 +1,7 @@
 const Hotel = require('../models/hotel');
 const express = require('express');
 const Room = require('../models/room');
-const router = express.Router();
+
 // Lấy tất cả khách sạn
 exports.getAllHotels = async (req, res) => {
     try {
@@ -26,6 +26,7 @@ exports.getHotelDetails = async (req, res) => {
                     select: 'rating comment',  // Chỉ lấy rating và comment từ Review
                 },
             });
+        console.log('Hotel rooms:', hotel.rooms);
 
         // Nếu khách sạn không tồn tại
         if (!hotel) {
@@ -34,6 +35,9 @@ exports.getHotelDetails = async (req, res) => {
                 message: 'Hotel not found',
             });
         }
+        // Kiểm tra danh sách các phòng liên kết với khách sạn
+        // const rooms = await Room.find({ hotel: hotelId });
+        // console.log('Rooms linked to this hotel in Room collection:', rooms);
 
         // Trả về chi tiết khách sạn cùng với các phòng
         res.status(200).json({

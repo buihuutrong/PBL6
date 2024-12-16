@@ -21,4 +21,4 @@ router.put('/hotel/:id', protect, authorize('admin', 'hotelOwner'), hotelControl
 // Chi tiết khách sạn và danh sách phòng
 router.get('/detailhotel/:id', hotelController.getHotelDetails);
 
-
+module.exports = router;

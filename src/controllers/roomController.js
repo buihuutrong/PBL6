@@ -190,6 +190,11 @@ exports.addRoom = async (req, res) => {
         // Lưu phòng vào MongoDB
         await room.save();
 
+        // Cập nhật khách sạn để thêm _id của phòng vào trường 'rooms'
+        await Hotel.findByIdAndUpdate(hotelId, {
+            $push: { rooms: room._id }, // Thêm _id của phòng vào mảng 'rooms' của khách sạn
+        });
+
         res.status(201).json({
             success: true,
             data: room,
