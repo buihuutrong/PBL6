@@ -37,6 +37,7 @@ exports.getCustomerTransactions = async (req, res) => {
 
             return {
                 transactionId: transaction._id,
+                roomId: transaction.reservationId?.room,
                 amount: transaction.amount,
                 paymentMethod: transaction.paymentMethod,
                 transactionDate: transaction.transactionDate,
@@ -84,6 +85,7 @@ exports.getHostTransactions = async (req, res) => {
                 balance: hostBalance?.totalBalance || 0, // Nếu không có, trả về 0
                 transactions: transactions.map(transaction => ({
                     transactionId: transaction._id,
+                    roomId: transaction.reservationId?.room,
                     hostAmount: transaction.hostAmount,
                     amount: transaction.amount,
                     paymentMethod: transaction.paymentMethod,
@@ -127,6 +129,8 @@ exports.getAdminTransactions = async (req, res) => {
 
         const formattedTransactions = transactions.map((transaction) => ({
             transactionId: transaction._id,
+            hostId: transaction.hostId,
+            roomId: transaction.reservationId?.room,
             amount: transaction.amount,
             paymentMethod: transaction.paymentMethod,
             status: transaction.status,
@@ -137,7 +141,7 @@ exports.getAdminTransactions = async (req, res) => {
             hostEmail: transaction.hostEmail || "N/A",
             checkInDate: transaction.reservationId?.checkInDate || null,
             checkOutDate: transaction.reservationId?.checkOutDate || null,
-            hotelName: transaction.reservationId?.room?.hotel?.name || null,
+            // hotelName: transaction.reservationId?.room?.hotel?.name || null,
         }));
 
         res.status(200).json({

@@ -203,6 +203,7 @@ exports.handleZaloPayCallback = async (req, res) => {
             orderId: order._id,
             userId: order.user._id, // Lấy từ liên kết với Order
             hostId: hostId, // Lấy hostId từ Reservation
+            roomId: room,
             reservationId: order.reservation,
             amount: order.amount, // Giả sử Order có trường amount
             hostAmount: hostAmount, // Tính toán dựa trên công thức (amount - adminFee)
