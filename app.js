@@ -6,6 +6,7 @@ const roomRoutes = require('./src/routes/roomRoutes')
 const reservationRoutes = require('./src/routes/reservationRoutes');
 const orderRoutes = require('./src/routes/orderRoutes');
 const reviewRoutes = require('./src/routes/reviewRoutes');
+const cronJobs = require('./src/utils/cronJobs');
 const transactionRoutes = require('./src/routes/transactionRoutes')
 const { engine } = require('express-handlebars'); // Sử dụng destructuring để lấy engine từ express-handlebars
 const path = require('path');

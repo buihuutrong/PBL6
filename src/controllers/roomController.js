@@ -299,49 +299,6 @@ exports.deleteRoom = async (req, res) => {
         });
     }
 };
-// exports.searchRooms = async (req, res) => {
-//     const { location, checkInDate, checkOutDate, guests } = req.body;
-
-//     try {
-//         // Chuyển đổi checkInDate và checkOutDate thành đối tượng Date
-//         const checkIn = new Date(checkInDate);
-//         const checkOut = new Date(checkOutDate);
-
-//         // Tạo mảng ngày yêu cầu
-//         const requestedDates = [];
-//         for (let date = new Date(checkIn); date <= checkOut; date.setDate(date.getDate() + 1)) {
-//             requestedDates.push(date.toISOString().split('T')[0]); // Chuyển thành chuỗi YYYY-MM-DD
-//         }
-
-//         // Tìm khách sạn theo địa chỉ
-//         const hotels = await Hotel.find({ location: location }).select('_id');
-
-//         // Tìm phòng theo khách sạn, sức chứa và có sẵn trong khoảng ngày
-//         const availableRooms = await Room.find({
-//             hotel: { $in: hotels }, // Tìm phòng trong các khách sạn theo địa chỉ
-//             capacity: { $gte: guests }, // Lọc theo sức chứa
-//             availableDates: { $all: requestedDates }, // Kiểm tra tất cả ngày yêu cầu
-//         });
-
-//         if (availableRooms.length === 0) {
-//             return res.status(404).json({
-//                 success: false,
-//                 message: 'No rooms available for the selected dates and location.',
-//             });
-//         }
-
-//         return res.status(200).json({
-//             success: true,
-//             data: availableRooms,
-//         });
-//     } catch (error) {
-//         res.status(500).json({
-//             success: false,
-//             message: error.message,
-//         });
-//     }
-// };
-
 
 exports.searchRooms = async (req, res) => {
     const { location, checkInDate, checkOutDate, guests } = req.body;

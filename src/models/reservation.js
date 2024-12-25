@@ -25,6 +25,7 @@ const reservationSchema = new mongoose.Schema({
         enum: ['booked', 'cancelled', 'completed'],
         default: 'booked',
     },
+    expirationDate: { type: Date, required: true }, // Thời gian hết hạn
 }, { timestamps: true });
 
 const Reservation = mongoose.model('Reservation', reservationSchema, 'Reservation');
